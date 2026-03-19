@@ -1,0 +1,4 @@
+#!/bin/env bash
+
+mpremote a0 fs cp *.py :
+mpremote reset
