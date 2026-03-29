@@ -1,7 +1,6 @@
 import time
 from machine import Pin, PWM
 
-
 class Motor:
     STATUS = ["NEU", "FWD", "REV", "BRK"]
     def __init__(self, pwm:int, in1:int, in2:int, freq:int) -> None:

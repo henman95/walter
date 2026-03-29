@@ -1,8 +1,14 @@
+import select
 import sys
 import time
+import _thread
 
+from machine import Pin
+
+from counters import Counter
 from motors import MotorController, Motor
 from displays import Display
+
 
 def main():
     controller = MotorController([
@@ -11,6 +17,8 @@ def main():
     ])
 
     (motor_left, motor_right) = controller.motors
+    encoder_left = Counter(21)
+    encoder_right = Counter(26)
 
     display = Display(
         display_type = "waveshare_oled_2.23",
@@ -23,11 +31,17 @@ def main():
         f"Right {Motor.STATUS[motor_right.status]} {motor_right.speed}"
     ]
 
-    while line := sys.stdin.readline():
-        if line[0] == '\x00':
-            tokens = line[1:].strip().split(' ')
+    #while line := sys.stdin.readline():
+    while True:
+        ready, _, _ = select.select([sys.stdin], [], [], 1)
+        if ready:
+            line = sys.stdin.readline()
+            if line[0] == '\x00':
+                tokens = line[1:].strip().split(' ')
+            else:
+                tokens = line.strip().split(' ')
         else:
-            tokens = line.strip().split(' ')
+            tokens = ['g']
 
         command = tokens[0]
         try:
@@ -66,8 +80,14 @@ def main():
             time.sleep(1)
             controller.neutral()
         elif command == 'g' and argc == 0:
+            pulses, hz = encoder_left.value()
+            pulse_l, hz_l = encoder_left.value()
+            pulse_r, hz_r = encoder_right.value()
             print(f"Left : {Motor.STATUS[motor_left.status]} {motor_left.speed}")
             print(f"Right: {Motor.STATUS[motor_right.status]} {motor_right.speed}")
+            print(f"Encoder")
+            print(f"  L: {pulse_l:<6} {hz_l:<5}")
+            print(f"  R: {pulse_r:<6} {hz_r:<5}")
         else:
             print(f"Error: {command} : {args}")
 
