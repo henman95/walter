@@ -3,7 +3,7 @@ from rp2 import asm_pio, StateMachine
 
 import time
 
-class Counter:
+class Encoder:
     def __init__(self, in_base:int, pio_sm:int=0, samples:int=50_000_000, timeout_ms:int=50) -> None:
         self.pio_sm:int = pio_sm 
         self.in_base:Pin =  Pin(in_base, Pin.IN)
@@ -14,10 +14,10 @@ class Counter:
 
         self.sideset_pin:Pin = Pin(20,Pin.OUT)
 
-    def value(self):
-        #print(self.sideset_pin)
+    @property
+    def pps(self) -> int :
         pulses:int = 0
-        hz:int = 0
+        pps:int = 0
         sm = StateMachine(
             self.pio_sm,
             self.pio_counter,
@@ -39,8 +39,8 @@ class Counter:
         sm.active(0)
         
         if pulses > 0:
-            hz = int(1/(self.sample_ns * pulses * 6))
-        return (pulses,hz)
+            pps = int(1/(self.sample_ns * pulses * 6))
+        return pps 
 
     @staticmethod
     @asm_pio()
