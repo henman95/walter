@@ -31,7 +31,6 @@ class Encoder:
         while time.time_ns() < end:
             if sm.rx_fifo() > 0:
                 value = sm.get()
-                #print(f"V: {value}")
                 pulses = self.samples - value
                 pulses = 0 if pulses<0 else pulses
                 break

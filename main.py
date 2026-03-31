@@ -1,7 +1,6 @@
-from walter import Walter
-
+from personality import TwoWheel
 def main() -> None:
-    robot = Walter()
+    robot = TwoWheel()
     robot.run()
 
 if __name__ == "__main__":
