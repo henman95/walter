@@ -18,8 +18,9 @@ int main() {
   display_init();
 
   tasks_add("blink_led", 1000, true, task_blink_led_init, task_blink_led);
+  tasks_add("watchdog", 1000, true, NULL, display_watchdog_toggle);
   tasks_add("serial", 50, true, NULL, task_process_serial);
-  tasks_add("print_state", 2000, true, NULL, task_print_state);
+  tasks_add("print_state", 2000, false, NULL, task_print_state);
   tasks_add("display_update", 32, true, display_init, display_update);
   tasks_print();
 
