@@ -20,6 +20,7 @@ class Motor:
     ]
 
     def __init__(self, pwm: int, in1: int, in2: int, en1: int, en2: int) -> None:
+        self.id = 0
         self.pwm_pin: PWM = PWM(Pin(pwm))
         self.in1: Pin = Pin(in1, Pin.OUT)
         self.in2: Pin = Pin(in2, Pin.OUT)
@@ -61,12 +62,12 @@ class Motor:
 
     @pwm.setter
     def pwm(self, value: int) -> None:
-        if value > 100:
-            value = 100
+        if value > 65535:
+            value = 65535
         elif value < 0:
             value = 0
         self.encoder_pwm = value
-        self.pwm_pin.duty_u16(int(65535 * abs(value / 100)))
+        self.pwm_pin.duty_u16(int(value))
 
     def update(self):
         self.encoder_rpm = self.encoder.pps / 495 * 60
@@ -90,9 +91,14 @@ class Motor:
         if self.state in [self.FORWARD, self.REVERSE]:
             self.pwm = self.pid()
 
-    def pid(self):
+    def pid(self) -> int:
+        #return int(self.rpm_setpoint * 344)
+        kA = 30
+        error = self.rpm_setpoint - self.rpm
         pwm_in = self.encoder_pwm
-        pwm_out = int(self.rpm_setpoint / 1.9)
+        pwm_out = int(pwm_in + error * kA)
+        #if error > 10:
+        #    print(f"E{self.id}: {error:3.2f} P:{pwm_in:5} {pwm_out:5}")
         return pwm_out
 
 
@@ -104,6 +110,8 @@ class MotorController:
         self.lock = _thread.allocate_lock()
         self.running = False
         self.motors = [Motor(**config) for config in configs]
+        for index,motor in enumerate(self.motors):
+            motor.id = index
 
     def update_task(self):
         while self.running:

@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+export PICO_SDK_PATH=$(pwd)/pico-sdk
+export FIRMWARE=controller.uf2
+
+# Create build dir if it doesn't exist
+if [[ ! -d build ]]; then
+  mkdir build
+fi
+
+cd build
+
+cmake ..
+
+if make -j$(nproc); then
+    echo "✅ Build successful! Loading firmware with picotool..."
+    
+    if sudo picotool load -x "${FIRMWARE}"; then
+        echo "✅ Firmware loaded successfully!"
+        
+        # Only proceed with connect if argument is "connect"
+        if [[ "$1" == "connect" ]]; then
+            echo "⏳ Waiting for /dev/ttyACM0 to become available..."
+            
+            # Wait up to 15 seconds for the device to appear
+            timeout=15
+            while [[ ! -e /dev/ttyACM0 ]] && [[ $timeout -gt 0 ]]; do
+                sleep 1
+                ((timeout--))
+                echo -n "."
+            done
+            echo ""
+            
+            if [[ -e /dev/ttyACM0 ]]; then
+                echo "✅ /dev/ttyACM0 is now available!"
+                echo "🔗 Starting mpremote a0..."
+                mpremote a0
+            else
+                echo "❌ Timeout: /dev/ttyACM0 did not appear within 15 seconds."
+                echo "   Check your Pico connection or firmware."
+                exit 1
+            fi
+        else
+            echo "ℹ️  mpremote skipped. Use './build.sh connect' to run it."
+        fi
+    else
+        echo "❌ picotool failed!"
+        exit 1
+    fi
+else
+    echo "❌ Build failed!"
+    exit 1
+fi

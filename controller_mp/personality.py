@@ -3,28 +3,27 @@ import sys
 import time
 
 from machine import Pin
-
-from displays import Display
 from motors import Motor, MotorController
+from LCD_1inch47 import Display2 as Display
+
 
 
 class TwoWheel:
     def __init__(self) -> None:
-        self.update_rate = 0.01
+        self.show_stats = False
         self.controller = MotorController(
             [
-                {"pwm": 14, "in1": 10, "in2": 11, "en1": 22, "en2": 26},
-                {"pwm": 15, "in1": 12, "in2": 13, "en1": 21, "en2": 20},
+                {"pwm": 25, "in1": 9, "in2": 8, "en1": 7, "en2": 6},
+                {"pwm":  1, "in1": 2, "in2": 3, "en1": 4, "en2": 5},
             ]
         )
-        self.display = Display(
-            display_type="waveshare_oled_2.23",
-            params={"spi": 0, "cs": 17, "rst": 12, "dc": 16, "clk": 18, "mosi": 19},
-        )
+        self.display = Display(spi=0, clk=18, dc=16, rst=20, mosi=19, bl=21)
+        self.display.init()
+        self.display.lines()
 
     def run(self) -> None:
         text = self.display_text
-        self.display.text = text
+        #self.display.text = text
         self.controller.start_updates()
 
         try:
@@ -32,20 +31,26 @@ class TwoWheel:
                 new_text: list[str] = self.display_text
                 if new_text != text:
                     text = new_text
-                    self.display.text = text
+                    #self.display.text = text
+
+                if self.show_stats:
+                    m0 = self.controller.motors[0]
+                    m1 = self.controller.motors[1]
+                    print(f"{m0.rpm:<3.2f} {m0.pwm:<5} xxx {m1.rpm:<3.2f} {m1.pwm:<5}")
 
                 self.process_command()
-                time.sleep(1)
+                time.sleep(.5)
         except KeyboardInterrupt:
             self.controller.stop_updates()
 
     @property
     def display_text(self) -> list[str]:
-        ml, mr = self.controller.motors
+        m0 = self.controller.motors[0]
+        m1 = self.controller.motors[1]
         return [
-            f"M: D PCT RPM",
-            f"L: {ml.pwm:<3} {ml.rpm:>3.2f}",
-            f"R: {mr.pwm:<3} {mr.rpm:>3.2f}",
+            f"Hello",
+            f"0: {m0.rpm:<3} {m0.pwm:<5}",
+            f"0: {m1.rpm:<3} {m1.pwm:<5}",
         ]
 
     def process_command(self):
@@ -92,6 +97,12 @@ class TwoWheel:
                 self.controller.cmd(
                     [[0, Motor.FORWARD, velocity], [1, Motor.REVERSE, velocity]]
                 )
+            elif command == "0" and argc ==1:
+                print(f'Motor0: {velocity}')
+                self.controller.cmd( [[0, Motor.FORWARD, velocity]])
+            elif command == "1" and argc ==1:
+                print(f'Motor1: {velocity}')
+                self.controller.cmd( [[1, Motor.FORWARD, velocity]])
             elif command == "p":
                 print("Brake:")
                 self.controller.cmd([[0, Motor.BRAKE, 0], [1, Motor.BRAKE, 0]])
@@ -102,11 +113,6 @@ class TwoWheel:
                 print("Stop")
                 self.controller.stop()
             elif command == "g" and argc == 0:
-                print(
-                    f"L: {motor_left.pwm:<3} {motor_left.rpm:>4}",
-                    f"R: {motor_right.pwm:<3} {motor_right.rpm:>4}",
-                )
-                print(f"L: {motor_right.rpm:>4}")
-                print(f"R: {motor_right.rpm:>4}")
+                self.show_stats = not self.show_stats
             else:
                 print(f"Error: {command} : {args}")
