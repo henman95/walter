@@ -3,6 +3,9 @@
 
 #include "pico/critical_section.h"
 
+#define MAX_RPM 190
+#define MAX_PWM 65535
+
 typedef struct {
   float  rpm;
   float  bias;
