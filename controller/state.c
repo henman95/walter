@@ -62,6 +62,8 @@ bool state_display_needed() {
 // ====================== SETTERS ======================
 void state_set_rpm(float rpm)
 {
+    if (rpm > MAX_RPM) rpm = MAX_RPM;
+    if (rpm < MIN_RPM) rpm = MIN_RPM;
     critical_section_enter_blocking(&state_lock_token);
     state.rpm = rpm;
     critical_section_exit(&state_lock_token);
@@ -70,6 +72,8 @@ void state_set_rpm(float rpm)
 
 void state_set_bias(float bias )
 {
+    if (bias > MAX_BIAS) bias = MAX_BIAS;
+    if (bias < MIN_BIAS) bias = MIN_BIAS;
     critical_section_enter_blocking(&state_lock_token);
     state.bias = bias;
     critical_section_exit(&state_lock_token);
