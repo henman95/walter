@@ -26,6 +26,7 @@ target_sources( controller PRIVATE
     tasks.c
     task_misc.c
     task_serial.c
+    motors.c
 )
 
 # enable usb output, disable uart output
