@@ -9,16 +9,21 @@
 #define MAX_BIAS  20.0
 #define MIN_BIAS -20.0 
 
-typedef struct {
-  float  rpm;
-  float  bias;
-  float  rpm_l;
-  float  rpm_r;
-  int    pwm_l;
-  int    pwm_r;
+typedef enum {NEUTRAL,FORWARD,REVERSE,BRAKE} MotorState;
 
-  bool   display_needed;
+typedef struct {
+  float      rpm;
+  float      bias;
+  float      rpm_l;
+  float      rpm_r;
+  int        pwm_l;
+  int        pwm_r;
+  MotorState state_l;
+  MotorState state_r;
+  bool       display_needed;
 } state_t;
+
+
 
 extern state_t state;
 extern critical_section_t state_lock_token;
@@ -41,6 +46,8 @@ void state_set_rpm_l(float setpoint);
 void state_set_rpm_r(float setpoint);
 void state_set_pwm_l(int pwm);
 void state_set_pwm_r(int pwm);
+void state_set_state_l(MotorState state);
+void state_set_state_r(MotorState state);
 
 // Getters
 float state_get_rpm(void);
@@ -49,4 +56,6 @@ float state_get_rpm_l(void);
 float state_get_rpm_r(void);
 int   state_get_pwm_l(void);
 int   state_get_pwm_r(void);
+MotorState state_get_state_l(void);
+MotorState state_get_state_r(void);
 #endif

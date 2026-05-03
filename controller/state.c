@@ -3,16 +3,17 @@
 #include "stdio.h"
 
 state_t state;
-critical_section_t state_lock_token;
+critical_section_t state_lock_token;\
 
 void state_init() {
-  state.rpm   = 0;
-  state.bias  = 0;
-  state.rpm_l = 0;
-  state.rpm_r = 0;
-  state.pwm_l = 0;
-  state.pwm_r = 0;
-
+  state.rpm     = 0;
+  state.bias    = 0;
+  state.rpm_l   = 0;
+  state.rpm_r   = 0;
+  state.pwm_l   = 0;
+  state.pwm_r   = 0;
+  state.state_l = NEUTRAL;
+  state.state_r = NEUTRAL;
   state.display_needed = true;
 
   critical_section_init(&state_lock_token);
@@ -112,6 +113,22 @@ void state_set_pwm_r(int pwm)
     state_display_needed_set();
 }
 
+void state_set_state_l(MotorState value)
+{
+    critical_section_enter_blocking(&state_lock_token);
+    state.state_l = value;
+    critical_section_exit(&state_lock_token);
+    state_display_needed_set();
+}
+
+void state_set_state_r(MotorState value)
+{
+    critical_section_enter_blocking(&state_lock_token);
+    state.state_r = value;
+    critical_section_exit(&state_lock_token);
+    state_display_needed_set();
+}
+
 // ====================== GETTERS ======================
 
 float state_get_rpm(void)
@@ -162,5 +179,22 @@ int state_get_pwm_r(void)
     critical_section_exit(&state_lock_token);
     return val;
 }
+
+MotorState state_get_state_l(void)
+{
+    critical_section_enter_blocking(&state_lock_token);
+    MotorState val = state.state_l;
+    critical_section_exit(&state_lock_token);
+    return val;
+}
+
+MotorState state_get_state_r(void)
+{
+    critical_section_enter_blocking(&state_lock_token);
+    MotorState val = state.state_r;
+    critical_section_exit(&state_lock_token);
+    return val;
+}
+
 
 

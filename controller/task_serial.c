@@ -79,9 +79,17 @@ void serial_update(void) {
           state_set_bias(0);
         }
         break;
+      case 'i':
+        if (!has_param) 
+          motors_init();
+        break;
       case 'u':
         if (!has_param)
           motors_update();
+        break;
+      case 'p':
+        if (!has_param)
+          motors_print();
         break;
       default:
         printf("Unknown Command: %c\n", cmd);
